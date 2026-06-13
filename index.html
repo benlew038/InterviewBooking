@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Management Trainee Interview Booking</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="topbar-brand">
+          <img src="assets/xmu-logo.png" alt="XMU logo" class="topbar-logo" />
+          <span class="topbar-brand-text">XMUM Orientation Interview Booking</span>
+        </div>
+        <p class="eyebrow">December Orientation 2026 Committee Recruitment</p>
+        <h1>Schedule your interview</h1>
+
+        <button id="adminToggle" class="admin-button" type="button">Admin</button>
+      </header>
+
+      <main>
+        <section id="nameStep" class="card active">
+          <div class="card-header">
+            <span class="step-badge">Step 1</span>
+            <h2>Candidate Name Verification</h2>
+          </div>
+          <p class="lead">Enter your full English name before accessing the booking page.</p>
+          <form id="nameForm" class="form-grid">
+            <label for="fullName">Full English Name</label>
+            <input id="fullName" name="fullName" type="text" autocomplete="name" placeholder="e.g. Chuah Jia Xuan" required />
+            <p class="helper-text">Please enter the name according to your student ID.</p>
+            <div class="button-row">
+              <button type="submit" class="primary-button">Continue</button>
+            </div>
+            <p id="nameFeedback" class="form-feedback"></p>
+          </form>
+        </section>
+
+        <section id="bookingStep" class="card hidden">
+          <div class="card-header">
+            <span class="step-badge step-2">Step 2</span>
+            <h2>Interview Booking</h2>
+          </div>
+          <p class="lead">Select one date and one time slot. Each slot is limited to 3 candidates.</p>
+          <form id="bookingForm" class="form-grid">
+            <label for="interviewDate">Interview Date</label>
+            <select id="interviewDate" name="interviewDate" required></select>
+
+            <label for="timeSlot">Interview Time Slot</label>
+            <select id="timeSlot" name="timeSlot" required></select>
+
+            <div class="slot-meta">
+              <p><strong>Availability</strong> · <span id="slotQuota">Loading…</span></p>
+            </div>
+
+            <div class="button-row">
+              <button type="submit" class="primary-button">Book Interview</button>
+              <button id="refreshButton" type="button" class="secondary-button">Refresh Availability</button>
+            </div>
+            <p id="bookingFeedback" class="form-feedback"></p>
+            <p class="note">Interview dates are 15–17 June 2026 with time slots every 15 minutes from 7:00 PM to 10:15 PM.</p>
+          </form>
+        </section>
+
+        <section id="confirmationSection" class="card hidden">
+          <div class="card-header">
+            <h2>You're all set.</h2>
+          </div>
+          <p class="lead">Your interview is confirmed. Save your booking reference number.</p>
+          <div class="confirmation-grid">
+            <div>
+              <span>Candidate Name</span>
+              <strong id="confirmName"></strong>
+            </div>
+            <div>
+              <span>Interview Date</span>
+              <strong id="confirmDate"></strong>
+            </div>
+            <div>
+              <span>Interview Time</span>
+              <strong id="confirmTime"></strong>
+            </div>
+            <div>
+              <span>Booking Reference</span>
+              <strong id="confirmReference"></strong>
+            </div>
+          </div>
+          <div class="button-row">
+            <button id="newBookingButton" type="button" class="secondary-button">Make Another Booking</button>
+          </div>
+        </section>
+
+        <section id="adminSection" class="card hidden">
+          <div class="card-header">
+            <h2>Admin View</h2>
+          </div>
+          <p class="lead">Booking records are loaded from Google Sheets.</p>
+          <div class="button-row">
+            <button id="adminRefresh" type="button" class="secondary-button">Refresh Bookings</button>
+          </div>
+          <div class="table-wrapper">
+            <table id="adminTable">
+              <thead>
+                <tr>
+                  <th>Candidate Name</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Reference</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="adminFeedback" class="form-feedback"></p>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
