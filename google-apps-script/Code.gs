@@ -106,9 +106,8 @@ function getBookingRows(sheet) {
 }
 
 /**
- * Normalize various time representations from Sheets into frontend format 'h:mm a' (e.g. '7:00 PM').
- * Supports Date objects, 24-hour strings like '19:00', AM/PM strings like '7:00 PM',
- * and numeric time values (fraction of day or milliseconds).
+ * Normalize time values into the frontend 24-hour slot format 'HH:mm'.
+ * This keeps slot keys consistent between the page and the backend.
  */
 function normalizeTime(raw) {
   if (raw instanceof Date) {
@@ -129,14 +128,14 @@ function normalizeTime(raw) {
     if (num > 1) {
       // treat as epoch milliseconds if large
       if (num > 1000000000) {
-        return Utilities.formatDate(new Date(num), Session.getScriptTimeZone(), 'h:mm a');
+        return Utilities.formatDate(new Date(num), Session.getScriptTimeZone(), 'HH:mm');
       }
       // otherwise treat as fraction-of-day incorrectly formatted as number >1
       var msA = Math.round((num % 1) * 24 * 3600 * 1000);
-      return Utilities.formatDate(new Date(msA), Session.getScriptTimeZone(), 'h:mm a');
+      return Utilities.formatDate(new Date(msA), Session.getScriptTimeZone(), 'HH:mm');
     }
     var ms = Math.round(num * 24 * 3600 * 1000);
-    return Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'h:mm a');
+    return Utilities.formatDate(new Date(ms), Session.getScriptTimeZone(), 'HH:mm');
   }
 
   // Normalize AM/PM punctuation and spacing
