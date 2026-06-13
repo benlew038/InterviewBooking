@@ -1,4 +1,6 @@
 const GOOGLE_APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxl-Di2ByjvsZjrLNVpDMctrd04rLmawmUZu-sOVJByp7q1kmeulGPvBros1xY4VP1x/exec';
+const NETLIFY_PROXY_URL = '/.netlify/functions/proxy';
+const API_BASE_URL = window.location.hostname.includes('netlify.app') ? NETLIFY_PROXY_URL : GOOGLE_APPS_SCRIPT_WEB_APP_URL;
 
 const INTERVIEW_DATES = ['15 June 2026', '16 June 2026', '17 June 2026'];
 const TIME_SLOTS = generateTimeSlots('19:00', '22:15', 15);
@@ -154,7 +156,7 @@ function loadAvailability() {
     return;
   }
 
-  const url = `${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=availability`;
+  const url = `${API_BASE_URL}?action=availability`;
 
   fetch(url, {
     method: 'GET',
@@ -254,7 +256,7 @@ function handleBookingSubmit(event) {
     return;
   }
 
-  fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
+  fetch(API_BASE_URL, {
     method: 'POST',
     mode: 'cors',
     cache: 'no-store',
@@ -317,7 +319,7 @@ function loadAdminBookings() {
     return;
   }
 
-  const url = `${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=admin`;
+  const url = `${API_BASE_URL}?action=admin`;
 
   fetch(url, {
     method: 'GET',
