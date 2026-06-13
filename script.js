@@ -39,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   nameForm.addEventListener('submit', handleNameSubmit);
   bookingForm.addEventListener('submit', handleBookingSubmit);
-  interviewDateSelect.addEventListener('change', updateSlotSummary);
+  interviewDateSelect.addEventListener('change', () => {
+    updateSlotOptions();
+    updateSlotSummary();
+  });
   timeSlotSelect.addEventListener('change', updateSlotSummary);
   refreshButton.addEventListener('click', loadAvailability);
   adminToggle.addEventListener('click', toggleAdminView);
