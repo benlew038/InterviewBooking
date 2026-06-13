@@ -35,6 +35,10 @@ function doPost(e) {
   return handleRequest(payload);
 }
 
+function doOptions() {
+  return jsonResponse({ ok: true });
+}
+
 function handleRequest(params) {
   const action = String(params.action || '').toLowerCase();
 
@@ -303,5 +307,12 @@ function createBookingReference(name) {
 }
 
 function jsonResponse(payload) {
-  return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(ContentService.MimeType.JSON);
+  const output = ContentService.createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
+
+  output.setHeader('Access-Control-Allow-Origin', '*');
+  output.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  output.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  return output;
 }

@@ -156,7 +156,11 @@ function loadAvailability() {
 
   const url = `${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=availability`;
 
-  fetch(url)
+  fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    cache: 'no-store',
+  })
     .then((response) => response.json())
     .then((data) => {
       if (data.error) {
@@ -252,6 +256,8 @@ function handleBookingSubmit(event) {
 
   fetch(GOOGLE_APPS_SCRIPT_WEB_APP_URL, {
     method: 'POST',
+    mode: 'cors',
+    cache: 'no-store',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -313,7 +319,11 @@ function loadAdminBookings() {
 
   const url = `${GOOGLE_APPS_SCRIPT_WEB_APP_URL}?action=admin`;
 
-  fetch(url)
+  fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    cache: 'no-store',
+  })
     .then((response) => response.json())
     .then((data) => {
       if (data.error) {
