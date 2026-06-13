@@ -3,7 +3,12 @@ const NETLIFY_PROXY_URL = '/.netlify/functions/proxy';
 const API_BASE_URL = window.location.hostname.includes('netlify.app') ? NETLIFY_PROXY_URL : GOOGLE_APPS_SCRIPT_WEB_APP_URL;
 
 const INTERVIEW_DATES = ['15 June 2026', '16 June 2026', '17 June 2026'];
-const TIME_SLOTS = generateTimeSlots('19:00', '22:15', 15);
+const DATE_TIME_RANGES = {
+  '15 June 2026': ['18:30', '22:15'],
+  '16 June 2026': ['18:30', '22:15'],
+  '17 June 2026': ['19:00', '21:45'],
+};
+const TIME_SLOTS = generateTimeSlots('18:30', '22:15', 15);
 const MAX_BOOKINGS_PER_SLOT = 3;
 
 const nameForm = document.getElementById('nameForm');
@@ -31,6 +36,7 @@ const newBookingButton = document.getElementById('newBookingButton');
 
 let currentCandidateName = '';
 let slotCounts = {};
+let isSubmitting = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   populateDateOptions();
@@ -203,13 +209,15 @@ function refreshLocalAvailability() {
 function updateSlotOptions() {
   const selectedDate = interviewDateSelect.value;
   const currentDate = selectedDate || INTERVIEW_DATES[0];
+  const [startTime, endTime] = DATE_TIME_RANGES[currentDate] || ['18:30', '22:15'];
+  const allowedSlots = generateTimeSlots(startTime, endTime, 15);
 
   Array.from(timeSlotSelect.options).forEach((option) => {
     const key = getSlotKey(currentDate, option.value);
     const used = slotCounts[key] || 0;
     const remaining = Math.max(0, MAX_BOOKINGS_PER_SLOT - used);
     option.textContent = `${option.value} ${remaining > 0 ? `(${remaining} left)` : '(Fully Booked)'}`;
-    option.disabled = remaining === 0;
+    option.disabled = remaining === 0 || !allowedSlots.includes(option.value);
   });
 
   if (timeSlotSelect.selectedOptions.length === 0 || timeSlotSelect.selectedOptions[0].disabled) {
@@ -224,15 +232,31 @@ function handleBookingSubmit(event) {
   event.preventDefault();
   bookingFeedback.textContent = '';
 
+  if (isSubmitting) {
+    return;
+  }
+
+  isSubmitting = true;
+
+  const submitButton = bookingForm.querySelector(
+    'button[type="submit"]'
+  );
+
+  submitButton.disabled = true;
+  submitButton.textContent = 'Booking...';
+
   if (!currentCandidateName) {
     bookingFeedback.textContent = 'Please complete Step 1 before booking.';
+    isSubmitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = 'Book Interview';
     return;
   }
 
   const date = interviewDateSelect.value;
   const time = timeSlotSelect.value;
   const key = getSlotKey(date, time);
-  const used = slotCounts[key] || 0;
+  const used = slotCounts[key] ?? 0;
 
   if (used >= MAX_BOOKINGS_PER_SLOT) {
     bookingFeedback.textContent = 'This slot is already fully booked. Please select another time.';
@@ -279,7 +303,13 @@ function handleBookingSubmit(event) {
       loadAvailability();
     })
     .catch(() => {
-      bookingFeedback.textContent = 'Unable to connect to Google Sheets. Please try again later.';
+        bookingFeedback.textContent =
+            'Unable to connect to Google Sheets. Please try again later.';
+    })
+    .finally(() => {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Book Interview';
     });
 }
 

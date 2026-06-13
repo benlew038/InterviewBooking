@@ -2,6 +2,8 @@ const SHEET_ID = '1E-n7KpEPMju5_LY_3c045MDhEMxv6a9G8eVf6TbZ0CA';
 const SHEET_NAME = 'Bookings';
 const INTERVIEW_DATES = ['15 June 2026', '16 June 2026', '17 June 2026'];
 const TIME_SLOTS = [
+  '18:30',
+  '18:45',
   '19:00',
   '19:15',
   '19:30',
@@ -17,6 +19,11 @@ const TIME_SLOTS = [
   '22:00',
   '22:15',
 ];
+const DATE_TIME_RANGES = {
+  '15 June 2026': ['18:30', '22:15'],
+  '16 June 2026': ['18:30', '22:15'],
+  '17 June 2026': ['19:00', '21:45'],
+};
 const MAX_BOOKINGS_PER_SLOT = 3;
 const BOOKING_HEADERS = [
   'Candidate Name',
@@ -193,6 +200,11 @@ function normalizeDate(raw) {
   return s;
 }
 
+function getValidTimeSlotsForDate(date) {
+  const [startTime, endTime] = DATE_TIME_RANGES[date] || ['18:30', '22:15'];
+  return TIME_SLOTS.filter((slot) => slot >= startTime && slot <= endTime);
+}
+
 function getAvailability() {
   const sheet = getBookingSheet();
   const values = sheet.getDataRange().getValues().slice(1);
@@ -212,7 +224,7 @@ function getAvailability() {
   const slots = [];
 
   INTERVIEW_DATES.forEach((date) => {
-    TIME_SLOTS.forEach((time) => {
+    getValidTimeSlotsForDate(date).forEach((time) => {
       const key = `${date}||${time}`;
       slots.push({ date, time, count: counts[key] || 0 });
     });
@@ -222,60 +234,88 @@ function getAvailability() {
 }
 
 function bookAppointment(payload) {
-  const name = String(payload.name || '').trim();
-  const date = normalizeDate(payload.date);
-  const time = normalizeTime(payload.time);
 
-  if (!name || !date || !time) {
-    return { success: false, error: 'Candidate name, interview date, and time slot are required.' };
-  }
+  const lock = LockService.getScriptLock();
+  let locked = false;
 
-  if (INTERVIEW_DATES.indexOf(date) === -1 || TIME_SLOTS.indexOf(time) === -1) {
-    return { success: false, error: 'Selected date or time slot is not valid.' };
-  }
-
-  const availability = getAvailability();
-  const key = `${date}||${time}`;
-  const count = availability.slots.find((slot) => slot.date === date && slot.time === time)?.count || 0;
-
-  if (count >= MAX_BOOKINGS_PER_SLOT) {
-    return { success: false, error: 'That time slot is already fully booked.' };
-  }
-
-  const sheet = getBookingSheet();
-
-  // Prevent duplicate bookings by the same candidate name
   try {
-    const lastRow = sheet.getLastRow();
-    if (lastRow > 1) {
-      const namesRange = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-      const lowerName = name.toLowerCase();
-      for (var i = 0; i < namesRange.length; i++) {
-        var existing = String(namesRange[i][0] || '').trim().toLowerCase();
-        if (existing && existing === lowerName) {
-          return { success: false, error: 'You have already booked an interview slot.' };
-        }
-      }
+
+    lock.waitLock(30000);
+    locked = true;
+    const name = String(payload.name || '').trim();
+    const date = normalizeDate(payload.date);
+    const time = normalizeTime(payload.time);
+
+    if (!name || !date || !time) {
+        return { success: false, error: 'Candidate name, interview date, and time slot are required.' };
     }
-  } catch (err) {
-    // If duplicate check fails for any reason, continue but log to execution transcript
-    console.log('Duplicate name check error', err);
+
+    if (INTERVIEW_DATES.indexOf(date) === -1) {
+        return { success: false, error: 'Selected date is not valid.' };
+    }
+
+    if (getValidTimeSlotsForDate(date).indexOf(time) === -1) {
+        return { success: false, error: 'Selected time slot is not valid for this date.' };
+    }
+
+    const availability = getAvailability();
+    const key = `${date}||${time}`;
+    const count = availability.slots.find((slot) => slot.date === date && slot.time === time)?.count || 0;
+
+    if (count >= MAX_BOOKINGS_PER_SLOT) {
+        return { success: false, error: 'That time slot is already fully booked.' };
+    }
+
+    const sheet = getBookingSheet();
+
+    // Prevent duplicate bookings by the same candidate name
+    try {
+        const lastRow = sheet.getLastRow();
+        if (lastRow > 1) {
+        const namesRange = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+        const lowerName = name.toLowerCase();
+        for (var i = 0; i < namesRange.length; i++) {
+            var existing = String(namesRange[i][0] || '').trim().toLowerCase();
+            if (existing && existing === lowerName) {
+            return { success: false, error: 'You have already booked an interview slot.' };
+            }
+        }
+        }
+    } catch (err) {
+        // If duplicate check fails for any reason, continue but log to execution transcript
+        console.log('Duplicate name check error', err);
+    }
+    const bookingReference = createBookingReference(name);
+    const timestamp = new Date();
+
+    sheet.appendRow([name, date, time, bookingReference, timestamp]);
+
+    return {
+        success: true,
+        booking: {
+        name,
+        date,
+        time,
+        reference: bookingReference,
+        timestamp: timestamp.toISOString(),
+        },
+    };
+  } catch (e) {
+
+    console.error(e);
+
+    return {
+      success: false,
+      error: 'System is busy. Please try again.'
+    };
+
+  } finally {
+
+    if (locked) {
+      lock.releaseLock();
+    }
+
   }
-  const bookingReference = createBookingReference(name);
-  const timestamp = new Date();
-
-  sheet.appendRow([name, date, time, bookingReference, timestamp]);
-
-  return {
-    success: true,
-    booking: {
-      name,
-      date,
-      time,
-      reference: bookingReference,
-      timestamp: timestamp.toISOString(),
-    },
-  };
 }
 
 function getAllBookings() {
