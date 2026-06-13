@@ -36,6 +36,7 @@ const newBookingButton = document.getElementById('newBookingButton');
 
 let currentCandidateName = '';
 let slotCounts = {};
+let isSubmitting = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   populateDateOptions();
@@ -231,6 +232,19 @@ function handleBookingSubmit(event) {
   event.preventDefault();
   bookingFeedback.textContent = '';
 
+  if (isSubmitting) {
+    return;
+  }
+
+  isSubmitting = true;
+
+  const submitButton = bookingForm.querySelector(
+    'button[type="submit"]'
+  );
+
+  submitButton.disabled = true;
+  submitButton.textContent = 'Booking...';
+
   if (!currentCandidateName) {
     bookingFeedback.textContent = 'Please complete Step 1 before booking.';
     return;
@@ -239,7 +253,7 @@ function handleBookingSubmit(event) {
   const date = interviewDateSelect.value;
   const time = timeSlotSelect.value;
   const key = getSlotKey(date, time);
-  const used = slotCounts[key] || 0;
+  const used = slotCounts[key] ?? 0;
 
   if (used >= MAX_BOOKINGS_PER_SLOT) {
     bookingFeedback.textContent = 'This slot is already fully booked. Please select another time.';
@@ -286,7 +300,13 @@ function handleBookingSubmit(event) {
       loadAvailability();
     })
     .catch(() => {
-      bookingFeedback.textContent = 'Unable to connect to Google Sheets. Please try again later.';
+        bookingFeedback.textContent =
+            'Unable to connect to Google Sheets. Please try again later.';
+    })
+    .finally(() => {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Book Interview';
     });
 }
 
