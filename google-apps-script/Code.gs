@@ -2,6 +2,8 @@ const SHEET_ID = '1E-n7KpEPMju5_LY_3c045MDhEMxv6a9G8eVf6TbZ0CA';
 const SHEET_NAME = 'Bookings';
 const INTERVIEW_DATES = ['15 June 2026', '16 June 2026', '17 June 2026'];
 const TIME_SLOTS = [
+  '18:30',
+  '18:45',
   '19:00',
   '19:15',
   '19:30',
