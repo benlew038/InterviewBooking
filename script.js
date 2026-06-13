@@ -247,6 +247,9 @@ function handleBookingSubmit(event) {
 
   if (!currentCandidateName) {
     bookingFeedback.textContent = 'Please complete Step 1 before booking.';
+    isSubmitting = false;
+    submitButton.disabled = false;
+    submitButton.textContent = 'Book Interview';
     return;
   }
 
